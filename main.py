@@ -4,12 +4,12 @@ import cv2
 import os
 import re
 import time
-# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0)
 
 
-class CapHack:
-    def read(self):
-        return cv2.imread("photoaf.jpg")
+#class CapHack:
+#    def read(self):
+#        return cv2.imread("photoaf.jpg")
 
 
 class AuthManager:
@@ -46,17 +46,18 @@ class FaceScanner:
     def __init__(self):
         self.trusted_face_encodings = []
         for image in os.listdir("Known_Images"):
-            self.trusted_face_encodings.append(face_recognition.face_encodings(face_recognition.load_image_file("Known_Images/%s" % image))[0])
+            self.trusted_face_encodings.append(face_recognition.face_encodings(face_recognition.load_image_file(f"Known_Images/{image}"))[0])
 
     def face_check(self):
-        converted_screencap = cap.read()[:, :, ::-1]
+        ret, frame = cap.read()
+        converted_screencap = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         face_encodings = face_recognition.face_encodings(converted_screencap,
                                                          face_recognition.face_locations(converted_screencap))
         for unknown_face in face_encodings:
             matches = face_recognition.compare_faces(self.trusted_face_encodings, unknown_face)
             if True in matches:
                 return True
-            return False
+        return False
 
 
 class QRCode:
@@ -97,8 +98,7 @@ class QRCode:
 
 if __name__ == "__main__":
     # cap = cv2.VideoCapture(0)
-    cap = CapHack()
     face_scanner = FaceScanner()
     auth_manager = AuthManager()
-    auth_manager.face_update()
-    print(auth_manager.is_authorized)
+    while True:
+        print(face_scanner.face_check())
