@@ -2,8 +2,14 @@ import face_recognition
 from pyzbar.pyzbar import decode
 import cv2
 import os
+import re
+import time
+# cap = cv2.VideoCapture(0)
 
-cap = cv2.VideoCapture(0)
+
+class CapHack:
+    def read(self):
+        return cv2.imread("photoaf.jpg")
 
 
 class AuthManager:
@@ -40,11 +46,10 @@ class FaceScanner:
     def __init__(self):
         self.trusted_face_encodings = []
         for image in os.listdir("Known_Images"):
-            for face in face_recognition.face_encodings(face_recognition.load_image_file("Known_Images/%s" % image)):
-                self.trusted_face_encodings.append(face)
+            self.trusted_face_encodings.append(face_recognition.face_encodings(face_recognition.load_image_file("Known_Images/%s" % image))[0])
 
     def face_check(self):
-        converted_screencap = cv2.imread("photoaf.jpg")[:, :, ::-1]
+        converted_screencap = cap.read()[:, :, ::-1]
         face_encodings = face_recognition.face_encodings(converted_screencap,
                                                          face_recognition.face_locations(converted_screencap))
         for unknown_face in face_encodings:
@@ -54,23 +59,45 @@ class FaceScanner:
             return False
 
 
-def face_check(image):
-    rgb_small_frame = image[:, :, ::-1]
-    face_encodings = face_recognition.face_encodings(rgb_small_frame, face_recognition.face_locations(rgb_small_frame))
-    for unknown_face in face_encodings:
-        matches = face_recognition.compare_faces(trusted_face_encodings, unknown_face)
-        if True in matches:
-            return True
-    return False
+class QRCode:
+    def __init__(self):
+        self.last_command = 0
+        self.command = ""
 
+    def scan_code(self):
+        self.command = re.findall(r"Decoded\(data='(.*)', type='.*', .*", decode(cv2.cvtColor(cap.read(), cv2.COLOR_BGR2RGB)))[0]
+        if " " in self.command:
+            self.execute_complex_command()
+        else:
+            self.execute_simple_command()
 
-def qr_code_scan():
-    decode(cv2.cvtColor(cap.read(), cv2.COLOR_BGR2RGB))
+    def execute_simple_command(self):
+        if self.command == "startv":
+            pass
+        if not auth_manager.is_authorized:
+            return
+        if self.command == "deauth":
+            pass
+        elif self.command == "stopv":
+            pass
+        elif self.command == "exit":
+            pass
+        elif self.command == "shutdown":
+            pass
+
+    def execute_complex_command(self):
+        split_command = re.findall(r"([^\s]+)(.*)", self.command)
+        if not auth_manager.is_authorized:
+            return
+        if split_command[0] == "auth":
+            pass
+        elif split_command[0] == "run":
+            pass
 
 
 if __name__ == "__main__":
-    load_faces()
     # cap = cv2.VideoCapture(0)
+    cap = CapHack()
     face_scanner = FaceScanner()
     auth_manager = AuthManager()
     auth_manager.face_update()

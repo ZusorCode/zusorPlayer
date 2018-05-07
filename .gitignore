@@ -1,3 +1,5 @@
 venv
 .idea
 Known_Images
+*.png
+*.jpg
